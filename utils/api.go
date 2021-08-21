@@ -10,8 +10,6 @@ import (
 	"github.com/go-playground/validator"
 )
 
-var validate *validator.Validate
-
 // tError data structure to pass an error data
 type tError struct {
 	Code    int     `json:"code"`
