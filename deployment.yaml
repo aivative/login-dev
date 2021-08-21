@@ -1,0 +1,65 @@
+# CONFIG MAP FOR USER SERVICE
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-svc-cm
+data:
+  RUN_ON_PORT: "8001"
+  MONGO_DATABASE: user
+  MONGO_COLLECTION: user
+---
+
+# DEPLOYMENT FOR USER SERVICE
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-dpl
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      name: auth
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: yosiaagusta/auth
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: auth-svc-cm
+            - configMapRef:
+                name: mongodb-cm
+            - configMapRef:
+                name: firebase-cm
+            - configMapRef:
+                name: services-list
+          volumeMounts:
+            - name: firebase-cred
+              mountPath: /app/identity_cred.json
+              subPath: identity_cred.json
+      volumes:
+        - name: firebase-cred
+          configMap:
+            name: firebase-cred
+---
+
+# SERVICE FOR USER SERVICE
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-svc
+spec:
+  selector:
+    app:  user
+  ports:
+    - port: 80
+      targetPort: 8001
