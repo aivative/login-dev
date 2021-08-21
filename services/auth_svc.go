@@ -25,14 +25,10 @@ func NewAuthService(ctx context.Context, uri string) (userSvc *AuthSVC, err erro
 	return
 }
 
-func (as *AuthSVC) GetUserPasswordSecret(ctx context.Context) (string, error) {
-	return as.repo.GetUserPasswordSecret(ctx)
-}
-
 func (as *AuthSVC) ValidatePassword(ctx context.Context, password, hashedPassword string) error {
-	passwordSecret, err := as.GetUserPasswordSecret(ctx)
+	passwordSecret, err := as.repo.GetUserPasswordSecret(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("can't get password secret: %v", err)
 	}
 
 	// init hasher
@@ -44,7 +40,7 @@ func (as *AuthSVC) ValidatePassword(ctx context.Context, password, hashedPasswor
 		return fmt.Errorf("invalid password")
 	}
 
-	return err
+	return nil
 }
 
 func (as *AuthSVC) GetUserAccountSecret(ctx context.Context) (string, error) {
