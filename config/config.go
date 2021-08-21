@@ -1,7 +1,6 @@
 package config
 
 import (
-	_ "embed"
 	"encoding/json"
 	"log"
 
@@ -9,12 +8,9 @@ import (
 )
 
 var (
-	//go:embed config.json
-	configStr string
-
-	MongoConf  = ParseMongoConfig(configStr)
-	SVCConf    = ParseServiceConfig(configStr)
-	APIKeyConf = ParseAPIKeyConfig(configStr)
+	MongoConf  map[string]TMongodbMetadata
+	SVCConf    map[string]TServiceMetadata
+	APIKeyConf map[string]TAPIKeyMetadata
 )
 
 type TServiceMetadata struct {
