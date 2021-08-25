@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	_ "embed"
 	"log"
+	"os"
 
 	"github.com/aivative/login-dev/config"
 	"github.com/aivative/login-dev/controller"
@@ -11,13 +11,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//go:embed config.json
-var configStr string
 
 func init() {
-	config.MongoConf = config.ParseMongoConfig(configStr)
-	config.SVCConf = config.ParseServiceConfig(configStr)
-	config.APIKeyConf = config.ParseAPIKeyConfig(configStr)
+	configBytes, err := os.ReadFile("config.json")
+	if err != nil {
+		logrus.Fatalln("CAN'T READ CONFIG FILE")
+	}
+
+	config.MongoConf = config.ParseMongoConfig(string(configBytes))
+	config.SVCConf = config.ParseServiceConfig(string(configBytes))
+	config.APIKeyConf = config.ParseAPIKeyConfig(string(configBytes))
 }
 
 func main() {
