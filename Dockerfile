@@ -1,13 +1,27 @@
-FROM alpine
-
 LABEL maintainer="Yosia <yosiaagustadewa@gmail.com>"
 
-WORKDIR /app
+# build
+FROM golang:1.16.4 AS builder
 
-COPY user .
+WORKDIR /go/src/app
+COPY . .
+RUN CGO_ENABLED='0' && go build -o login-dev main.go 
 
-RUN chmod +x /app/user
+# certs
+FROM alpine:latest as certs
+RUN apk --update add ca-certificates
 
-EXPOSE 8001
 
-CMD ["./user"]
+# runtime
+FROM debian:buster-slim
+
+COPY --from=builder /go/src/app/login-dev /login-dev
+
+COPY identity_cred.json /
+COPY config.json /
+
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+ENV PATH="/go/bin:${PATH}"
+
+CMD ["/login-dev"]

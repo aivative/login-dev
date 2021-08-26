@@ -5,5 +5,5 @@ configMap.yaml
 main
 login-dev
 
-.idea
-.vscode
+LICENCE
+README.md

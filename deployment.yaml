@@ -1,65 +1,76 @@
-# CONFIG MAP FOR USER SERVICE
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: auth-svc-cm
-data:
-  RUN_ON_PORT: "8001"
-  MONGO_DATABASE: user
-  MONGO_COLLECTION: user
 ---
-
-# DEPLOYMENT FOR USER SERVICE
+# DEPLOYMENT FOR LOGIN DEV
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-dpl
+  name: login-dev-dpl
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: auth
+      app: login-dev
   template:
     metadata:
-      name: auth
+      name: login-dev
       labels:
-        app: auth
+        app: login-dev
     spec:
       containers:
-        - name: auth
-          image: yosiaagusta/auth
+        - name: login-dev
+          image: yosiaagusta/login-dev
           ports:
-            - containerPort: 8000
-          envFrom:
-            - configMapRef:
-                name: auth-svc-cm
-            - configMapRef:
-                name: mongodb-cm
-            - configMapRef:
-                name: firebase-cm
-            - configMapRef:
-                name: services-list
+            - containerPort: 10001
           volumeMounts:
-            - name: firebase-cred
-              mountPath: /app/identity_cred.json
-              subPath: identity_cred.json
+            - name: config-svc
+              mountPath: /config.json
+              subPath: config.json
       volumes:
-        - name: firebase-cred
+        - name: config-svc
           configMap:
-            name: firebase-cred
----
+            name: config-svc
 
-# SERVICE FOR USER SERVICE
+---
+# SERVICE FOR LOGIN DEV
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-svc
+  name: login-dev-svc
 spec:
   selector:
-    app:  user
+    app:  login-dev
   ports:
     - port: 80
-      targetPort: 8001
+      targetPort: 10001
+
+
+---
+#  INGRESS FOR LOGIN DEV
+
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ingress-login-dev
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # nginx.ingress.kubernetes.io/auth-url: "https://868c-118-99-110-136.ngrok.io/check"
+    #    nginx.ingress.kubernetes.io/auth-url: /other
+    # nginx.ingress.kubernetes.io/configuration-snippet: |
+    #   auth_request_set $auth_status     $upstream_status;
+    #   auth_request_set $token           $upstream_http_authorization;
+    #   add_header       'Authorization'  $token;
+    #   add_header       'Auth-Status'    $auth_status;
+spec:
+  rules:
+    - host: b.yosiagusta.com
+      http:
+        paths:
+          - path: /auth/([\w\d/-]+)$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: login-dev-svc
+                port:
+                  number: 80
